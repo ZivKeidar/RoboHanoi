@@ -136,7 +136,6 @@ class Hanoi:
 if __name__ == '__main__':
     state_map = {'disk1': 'disk2',
                  'disk2': 'disk3',
-                 'disk3': 'disk4',
-                 'disk4': 'peg1'}
+                 'disk3': 'peg1'}
     Hanoi(state_map)
 
