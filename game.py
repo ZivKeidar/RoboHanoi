@@ -4,8 +4,12 @@ from tkinter import *
 from PIL import Image
 from PIL import ImageTk as itk, ImageTk
 import numpy as np
+from Hanoi import Hanoi
 from Hanoi_Interpreter import HanoiInterpreter
+from BEN import Execution
 import cv2
+from threading import Thread
+
 
 pegs_x = {'peg1': 110,
           'peg2': 320,
@@ -15,10 +19,53 @@ y_range = {'top': 170,
            'bottom': 350}
 
 
+def translate_plan(plan, state):
+   new_plan = ""
+   plan = str(plan)
+   for action in plan.split('),'):
+      cur_disk = action[action.index('disk'):action.index('disk') + 5]
+      if 'moveDiskToPeg' in action:
+         on = action[action.index('disk') + 7:action.index('disk') + 12]
+         to = action[action.index('peg'):action.index('peg') + 4]
+         if state[on].startswith('peg'):
+            new_action = f"(move {cur_disk} {state[on]} {to})-"
+            new_plan += new_action
+         else:
+            new_action = f"(move {cur_disk} {state[state[on]]} {action[action.index('peg'):action.index('peg') + 4]})-"
+            new_plan += new_action
+      elif 'moveDiskToDisk' in action:
+         on = action[action.index('disk') + 7:action.index('disk') + 12]
+         to = action[action.index('disk') + 14:action.index('disk') + 19]
+         new_action = f"(move {cur_disk} {state[on]} {state[to]})-"
+         new_plan += new_action
+      elif 'movePegToDisk' in action:
+         on = action[action.index('peg'):action.index('peg') + 4]
+         to = action[action.index('disk') + 13:action.index('disk') + 18]
+         if state[to].startswith('peg'):
+            new_action = f"(move {cur_disk} {on} {state[to]})-"
+            new_plan += new_action
+         else:
+            new_action = f"(move {cur_disk} {on} {state[state[to]]})-"
+            new_plan += new_action
+      elif 'movePegToPeg' in action:
+         on = action[action.index('peg'):action.index('peg') + 4]
+         to = action[action.index('peg') + 6:action.index('peg') + 10]
+         new_action = f"(move {cur_disk} {on} {to})-"
+         new_plan += new_action
+      state[cur_disk] = to
+   return new_plan
+
+def perform_planning(state):
+   current_plan = Hanoi(state).hanoi_plan
+   current_plan = translate_plan(current_plan, state.copy())
+   execution = Execution(current_plan, state)
+   execution.execute_next()
+
+
 class Game:
    def __init__(self):
+      self.player_2 = "Robot's"
       self.vc = cv2.VideoCapture(1)
-      #Define the tkinter instance
       self.turn = "Robot's"
       self.win = Toplevel()
       self.win.title("Click The Jedi to change Turns")
@@ -31,25 +78,28 @@ class Game:
       im = Image.open("jedi.jpg")
       im = im.resize((int(im.size[0]*0.5), int(im.size[1]*0.5)))
       click_btn = itk.PhotoImage(im)
-
       #Let us create a label for button event
       img_label = Label(image=click_btn)
       self.text = Label(self.win, text="Click The Jedi to Start or Switch Turns ", font=("Arial", 20))
-      button = Button(self.win, image=click_btn, command=self.click_command, borderwidth=0)
+      button = Button(self.win, image=click_btn, command=lambda: self.click_command(), borderwidth=0)
       button.pack(pady=30)
-
-
       self.text.pack(pady=0)
       self.win.mainloop()
 
+   def planning(self):
+      if self.turn == "Robot's":
+         current_plan = Hanoi(self.current_state).hanoi_plan
+         self.current_plan = self.translate_plan(current_plan, self.current_state.copy())
+         execution = Execution(self.current_plan, self.current_state)
+         execution.execute_next()
 
    def click_command(self):
-      self.text.config(text=f"{self.turn} Turn!\n Identified tate:")
+      self.text.config(text=f"{self.turn} Turn!\n Identified State:")
       self.i += 1
-      current_state = self.identify_state()
+      self.current_state = self.identify_state()
       width = 489
       height = 204
-      state = dict(sorted(current_state.items()))
+      state = dict(sorted(self.current_state.items()))
       state = str(state).replace(':', '')
       image_path = os.path.join('state_images', state+'.png')
       image = Image.open(image_path)
@@ -65,9 +115,48 @@ class Game:
          self.initimg.configure(image=self.state_image)
          self.initimg.image = self.state_image
       if state == "{'disk1' 'disk2', 'disk2' 'disk3', 'disk3' 'peg3'}":
-         self.finisher = "Human's" if self.turn == "Robot's" else "Robot's"
+         self.finisher = self.player_2 if self.turn == "Robot's" else "Robot's"
          self.finish()
-      self.turn = "Human's" if self.turn == "Robot's" else "Robot's"
+      if self.turn == "Robot's":
+         thread = Thread(target=perform_planning, args=(self.current_state,))
+         thread.start()
+      self.turn = self.player_2 if self.turn == "Robot's" else "Robot's"
+
+   def translate_plan(self, plan, state):
+      new_plan = ""
+      plan = str(plan)
+      for action in plan.split('),'):
+         cur_disk = action[action.index('disk'):action.index('disk')+5]
+         if 'moveDiskToPeg' in action:
+            on = action[action.index('disk')+7:action.index('disk')+12]
+            to = action[action.index('peg'):action.index('peg')+4]
+            if state[on].startswith('peg'):
+               new_action = f"(move {cur_disk} {state[on]} {to})-"
+               new_plan += new_action
+            else:
+               new_action = f"(move {cur_disk} {state[state[on]]} {action[action.index('peg'):action.index('peg') + 4]})-"
+               new_plan += new_action
+         elif 'moveDiskToDisk' in action:
+            on = action[action.index('disk') + 7:action.index('disk') + 12]
+            to = action[action.index('disk') + 14:action.index('disk') + 19]
+            new_action = f"(move {cur_disk} {state[on]} {state[to]})-"
+            new_plan += new_action
+         elif 'movePegToDisk' in action:
+            on = action[action.index('peg'):action.index('peg') + 4]
+            to = action[action.index('disk') + 13:action.index('disk') + 18]
+            if state[to].startswith('peg'):
+               new_action = f"(move {cur_disk} {on} {state[to]})-"
+               new_plan += new_action
+            else:
+               new_action = f"(move {cur_disk} {on} {state[state[to]]})-"
+               new_plan += new_action
+         elif 'movePegToPeg' in action:
+            on = action[action.index('peg'):action.index('peg') + 4]
+            to = action[action.index('peg') + 6:action.index('peg') + 10]
+            new_action = f"(move {cur_disk} {on} {to})-"
+            new_plan += new_action
+         state[cur_disk] = to
+      return new_plan
 
 
    def identify_state(self):
@@ -75,9 +164,7 @@ class Game:
          rval, frame = self.vc.read()
       else:
          print("Problem occurred while reading frame from webcam")
-
       state = HanoiInterpreter(frame, pegs_x, y_range).state_map
-
       # self.vc.release()
       return state
 

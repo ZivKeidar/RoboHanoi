@@ -129,9 +129,9 @@ class Hanoi:
         result_hanoi = FD_planner.solve(problem_hanoi)
         solve_time = time.time() - start_time
         plan_hanoi = result_hanoi.plan
-        print("The amazing plan for the Hanoi problem is: ", plan_hanoi)
-        print(f"It took the solver {solve_time} seconds to solve it")
-
+        # print("The amazing plan for the Hanoi problem is: ", plan_hanoi)
+        # print(f"It took the solver {solve_time} seconds to solve it")
+        return plan_hanoi
 
 if __name__ == '__main__':
     state_map = {'disk1': 'disk2',
