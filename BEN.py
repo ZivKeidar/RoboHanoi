@@ -12,6 +12,19 @@ class Execution:
         self.actions = self.string2actions(plan)
         self.disk_locations = self.position2locations(state)
 
+    def arm_execution(self, disk_num, place_from, place_to):
+        # use self.arm to send specific orders to the arm
+        # for example:
+        # arm.get_sent_pos(from_)       # arm goes to disk's position
+        # gripper = Gripper()
+        # gripper.pickup()
+        # arm.get_sent_pos(top_places[peg_from])      # arm goes up
+        # arm.get_sent_pos(top_places[peg_to])
+        # arm.get_sent_pos(to)      # arm goes down
+        # gripper.release()
+        # arm.get_sent_pos(home)
+        pass
+
     def execute_next(self):
         disk, peg_from, peg_to = self.actions[0][0], self.actions[0][1], self.actions[0][2]
         disk_num = int(disk[-1])
@@ -25,14 +38,8 @@ class Execution:
         else:
             place_to = places[peg_to_num][2]
         print(f"need to move disk {disk_num} from {place_from} to {place_to}")
-        # arm.get_sent_pos(from_)       # arm goes to disk's position
-        # gripper = Gripper()
-        # gripper.pickup()
-        # arm.get_sent_pos(top_places[peg_from])      # arm goes up
-        # arm.get_sent_pos(top_places[peg_to])
-        # arm.get_sent_pos(to)      # arm goes down
-        # gripper.release()
-        # arm.get_sent_pos(home)
+        # TODO send disk_num, place_from and place_to to arm_execution
+
 
     def string2actions(self, plan):
         actions = plan.split('-')[:-1]
