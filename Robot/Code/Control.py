@@ -13,11 +13,11 @@ class Arm:
             _type_: _description_
         """
         MODE="FORWARD"
-        try:
-            ctrl=PS4Controller
-            self.ps4=ctrl.PS4Controller()
-        except:
-            print("No Controller Found")
+        # try:
+        #     ctrl=PS4Controller
+        #     self.ps4=ctrl.PS4Controller()
+        # except:
+        #     print("No Controller Found")
         self.M1=move.Motor(1)
         self.M2=move.Motor(2)
         self.M3=move.Motor(3)
@@ -50,8 +50,7 @@ class Arm:
         """
         for motor in self.motors:
             motor.Disable_Torque()
-    
-    
+
     def _map(self,x, in_min, in_max, out_min, out_max):
         """gets a number and maps it from one ragne to another range.
 
@@ -273,3 +272,23 @@ class Arm:
         """
         self.M1.Close_Port()
 
+class Gripper():
+    def _init_(self) -> None:
+        self.HOST = '172.20.10.6'  # replace with the IP address of your ESP
+        self.PORT = 80  # replace with the port number you set up on the ESP
+
+    def pickup(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((self.HOST, self.PORT))
+            s.sendall(b'150')
+            success = s.recv(1024)
+            print('Received', repr(success))
+            return success
+
+    def release(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((self.HOST, self.PORT))
+            s.sendall(b'165')
+            success = s.recv(1024)
+            print('Received', repr(success))
+            return success

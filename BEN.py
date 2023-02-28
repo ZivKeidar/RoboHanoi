@@ -1,5 +1,6 @@
 # !! disk3 > disk2 > disk1 !!
-# from Nir import Arm
+from Robot.Code.Control import Arm
+from Robot.Code.Control import Gripper
 # from Control import Arm
 places = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] # order frome low to high --> [peg1[low,mid,high] , peg2[low,med.high] , peg3[low,med,high]]
 top_places = [111, 222, 333]  # coordinates above [peg1,peg2,peg3]
@@ -8,22 +9,21 @@ home = []
 
 class Execution:
     def __init__(self, plan, state):
-        # self.arm = Arm()
+        self.arm = Arm()
+        self.gripper = Gripper()
         self.actions = self.string2actions(plan)
         self.disk_locations = self.position2locations(state)
 
-    def arm_execution(self, disk_num, place_from, place_to):
+    def arm_execution(self, place_from, peg_from, peg_to, place_to):
         # use self.arm to send specific orders to the arm
         # for example:
-        # arm.get_sent_pos(from_)       # arm goes to disk's position
-        # gripper = Gripper()
-        # gripper.pickup()
-        # arm.get_sent_pos(top_places[peg_from])      # arm goes up
-        # arm.get_sent_pos(top_places[peg_to])
-        # arm.get_sent_pos(to)      # arm goes down
-        # gripper.release()
-        # arm.get_sent_pos(home)
-        pass
+        self.arm.set_Current_Pos(place_from)       # arm goes to disk's position
+        self.gripper.pickup()
+        self.arm.set_Current_Pos(top_places[peg_from])      # arm goes up
+        self.arm.set_Current_Pos(top_places[peg_to])
+        self.arm.set_Current_Pos(place_to)      # arm goes down
+        self.gripper.release()
+        self.arm.get_sent_pos(home)
 
     def execute_next(self):
         disk, peg_from, peg_to = self.actions[0][0], self.actions[0][1], self.actions[0][2]
@@ -37,7 +37,8 @@ class Execution:
             place_to = places[peg_to_num][1]
         else:
             place_to = places[peg_to_num][2]
-        print(f"need to move disk {disk_num} from {place_from} to {place_to}")
+        print(f"need to move disk {disk_num} from peg index {peg_from_num} and place {place_from} to peg {peg_to_num} and place {place_to}")
+        self.arm_execution(place_from, peg_from_num, peg_to_num, place_to)
         # TODO send disk_num, place_from and place_to to arm_execution
 
 
