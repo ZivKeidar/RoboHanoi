@@ -9,7 +9,7 @@ from Hanoi_Interpreter import HanoiInterpreter
 from BEN import Execution
 import cv2
 from threading import Thread
-
+import BEN
 
 pegs_x = {'peg1': 110,
           'peg2': 320,
@@ -17,6 +17,40 @@ pegs_x = {'peg1': 110,
 
 y_range = {'top': 170,
            'bottom': 350}
+
+pegs_x = {'peg1': 150,
+          'peg2': 260,
+          'peg3': 420}
+y_range = {'top': 120,
+           'bottom': 280}
+
+CURRENT_STATE = {}
+
+def webcam():
+   cv2.namedWindow("Hanoi")
+   vc = cv2.VideoCapture(4)
+   if vc.isOpened(): # try to get the first frame
+      rval, frame = vc.read()
+   else:
+      rval = False
+
+   while rval:
+      state = HanoiInterpreter(frame, pegs_x, y_range).state_map
+      for k, v in state.items():
+         CURRENT_STATE[k] = v
+      frame = cv2.putText(frame, str(state), (0, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+      frame = cv2.rectangle(frame, (pegs_x['peg1']-10, y_range['top']), (pegs_x['peg1']+10, y_range['bottom']), (255, 0, 0), 2)
+      frame = cv2.rectangle(frame, (pegs_x['peg2']-10, y_range['top']), (pegs_x['peg2']+10, y_range['bottom']), (255, 0, 0), 2)
+      frame = cv2.rectangle(frame, (pegs_x['peg3']-10, y_range['top']), (pegs_x['peg3']+10, y_range['bottom']), (255, 0, 0), 2)
+      cv2.imshow('Hanoi', frame)
+      rval, frame = vc.read()
+      key = cv2.waitKey(20)
+      if key == 27: # exit on ESC
+         break
+
+   vc.release()
+   cv2.destroyWindow("preview")
+      
 
 
 def translate_plan(plan, state):
@@ -64,8 +98,10 @@ def perform_planning(state):
 
 class Game:
    def __init__(self):
-      self.player_2 = "Robot's"
-      self.vc = cv2.VideoCapture(1)
+      self.player_2 = "Human's"
+      # self.vc = cv2.VideoCapture(4)
+      thread = Thread(target=webcam)
+      thread.start()
       self.turn = "Robot's"
       self.win = Toplevel()
       self.win.title("Click The Jedi to change Turns")
@@ -160,14 +196,15 @@ class Game:
 
 
    def identify_state(self):
-      if self.vc.isOpened():  # try to get the first frame
-         rval, frame = self.vc.read()
-      else:
-         print("Problem occurred while reading frame from webcam")
-      state = HanoiInterpreter(frame, pegs_x, y_range).state_map
-      # self.vc.release()
-      return state
-
+      # if self.vc.isOpened():  # try to get the first frame
+      #    rval, frame = self.vc.read()
+      # else:
+      #    print("Problem occurred while reading frame from webcam")
+      # state = HanoiInterpreter(frame, pegs_x, y_range).state_map
+      # # self.vc.release()
+      # return state
+      return CURRENT_STATE
+      
    def finish(self):
       # root = Tk()
       # print(os.listdir())

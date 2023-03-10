@@ -3,7 +3,7 @@ import move
 import time
 from ikpy import chain
 import numpy as np
-
+import socket 
 class Arm:
     
     def __init__(self) -> None:
@@ -28,9 +28,10 @@ class Arm:
         self.Sent_Positions=[0,0,0,0,0,0]
         self.motors=[self.M1,self.M2,self.M3,self.M4,self.M5,self.M6]
         for m in self.motors:
-            m.SetCurrentLimit(6000)
+            m.SetCurrentLimit(15000)
             m.SetAccelLimit(500)
             m.SetVelocityLimit(100)
+        self.EnableTorque()
         # self.Home()
         
     def EnableTorque(self):
@@ -101,12 +102,12 @@ class Arm:
             list: list of current angles
         """
         # self.EnableTorque()
-        self.M1_angle=self._map(self.M1.Read_Pos(),-501433,501433,-180,180)
-        self.M2_angle=self._map(self.M2.Read_Pos(),-501433,501433,-180,180)
-        self.M3_angle=self._map(self.M3.Read_Pos(),-501433,501433,-180,180)
-        self.M4_angle=self._map(self.M4.Read_Pos(),-501433,501433,-180,180)
-        self.M5_angle=self._map(self.M5.Read_Pos(),-501433,501433,-180,180)
-        self.M6_angle=self._map(self.M6.Read_Pos(),-501433,501433,-180,180)
+        self.M1_angle=int(self._map(self.M1.Read_Pos(),-501433,501433,-180,180))
+        self.M2_angle=int(self._map(self.M2.Read_Pos(),-501433,501433,-180,180))
+        self.M3_angle=int(self._map(self.M3.Read_Pos(),-501433,501433,-180,180))
+        self.M4_angle=int(self._map(self.M4.Read_Pos(),-501433,501433,-180,180))
+        self.M5_angle=int(self._map(self.M5.Read_Pos(),-501433,501433,-180,180))
+        self.M6_angle=int(self._map(self.M6.Read_Pos(),-501433,501433,-180,180))
         self.angles=[self.M1_angle,self.M2_angle,self.M3_angle,self.M4_angle,self.M5_angle,self.M6_angle]
         for idx,angle in enumerate(self.angles):
             if angle>360:
@@ -128,6 +129,20 @@ class Arm:
             # else:
             #     print("Angle "+str(idx)+" is out of range! ")
     
+    def set_Current_Pos_order(self,angles,order):
+        """get all angles and set positions 
+
+        Returns:
+            void: setting angles 
+        """
+        
+        for m in order:
+            real_pos=int(self._map(self.motors[m-1].Read_Pos(),-501433,501433,-180,180))
+            pos=int(self._map(angles[m-1],-180,180,-501433,501433))
+            self.Sent_Positions[m-1]=pos
+            self.motors[m-1].Write_Pos(pos)
+            time.sleep(3)
+                
     def inRange(self,value,id):
         return self.motors[id].DXL_MAXIMUM_POSITION_VALUE>value and self.motors[id].DXL_MINIMUM_POSITION_VALUE<value
 
@@ -277,14 +292,15 @@ class Arm:
         self.M1.Close_Port()
 
 class Gripper():
-    def _init_(self) -> None:
-        self.HOST = '172.20.10.6'  # replace with the IP address of your ESP
+    def __init__(self):
+        self.HOST = '172.20.10.7'  # replace with the IP address of your ESP
         self.PORT = 80  # replace with the port number you set up on the ESP
+        self.release()
 
     def pickup(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((self.HOST, self.PORT))
-            s.sendall(b'150')
+            s.sendall(b'45')
             success = s.recv(1024)
             print('Received', repr(success))
             return success
@@ -292,45 +308,8 @@ class Gripper():
     def release(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((self.HOST, self.PORT))
-            s.sendall(b'165')
+            s.sendall(b'90')
             success = s.recv(1024)
             print('Received', repr(success))
             return success
         
-arm=Arm()
-# arm.DisableTorque()
-arm.EnableTorque()
-
-# arm.Home()
-# for motor in arm.motors:
-#     motor.Write_Pos(0)
-
-# time.sleep(5)
-# arm.motors[1].Write_Pos(int(arm._map(30,-180,180,-501433,501433)))
-# print(arm.get_Current_Pos())
-
-angls_HOME=[-90, 41, 97, 0, -45, 0]
-# arm.set_Current_Pos(angls)
-print(arm.get_Current_Pos())
-
-#1541679
-
-point_left_low_1 = [-77.17947063711472, 56.4177068521617, 90.53325170062601, -0.02256233640946448, -60.43849028693512, 0.003642560448497534]
-point_left_mid_2 = [-77.20136787975207, 53.04804430502182, 91.12124650750945, -0.02256233640946448, -52.19758871081285, 0.003642560448497534]
-point_left_high_3 = [-78.16700037685223, 49.59007484549281, 90.16063960688666, -0.02292130747810006, -48.085214774357155, 0.003642560448497534]
-point_mid_low_4 = [-89.60382244479842, 53.420297427572564, 94.44101205943764, 0.00938609940931201, -53.85459971730597, 0.004001531517133117]
-point_mid_mid_5 = [-89.22941549518146, 53.081787596747716, 91.99857209238326, 0.010463013080880046, -53.84490749519318, 0.004001531517133117]
-point_mid_high_6 = [-88.82341908081435, 50.64257837039045, 92.04918702997207, 0.013281933977225435, -53.84598440863192, 0.003642560448497534]
-point_right_low_7 = [-99.40086412336677, 55.68181591558593, 90.74432675950726, -0.028664846438914537, -59.89034128189087, 0.0032835891470313072]
-point_right_mid_8 = [-100.7574162450619, 54.76284967283766, 90.78453153262751, -0.02184439403936267, -61.69919710117392, 0.0032835891470313072]
-point_right_high_9 = [-100.95951702422462, 50.80806408832288, 90.31427927559616, -0.02184439403936267, -53.60439679888077, 0.0032835891470313072]
-
-top_right = [-100.32952258829027, 41.592914706451324, 88.01327395683973, -0.04410060774534941, -45.553032010328025, 0.0032835891470313072]
-top_mid = [-89.49146446282975, 39.04098852688196, 94.79962427682261, -0.04086986696347594, -45.596108552999794, 0.0032835891470313072]
-top_left = [-77.12562495889142, 41.87147634878437, 92.81379566163378, -0.040510895662009716, -45.597903408808634, 0.0032835891470313072]
-arm.set_Current_Pos(angls_HOME)
-time.sleep(3)
-places=[point_left_low_1,point_left_mid_2,point_left_high_3,point_mid_low_4,point_mid_mid_5,point_mid_high_6,point_right_low_7,point_right_mid_8,point_right_high_9,top_right,top_mid,top_left]
-for place in places:
-    arm.set_Current_Pos([int(item) for item in place])
-    time.sleep(1)

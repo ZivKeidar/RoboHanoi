@@ -1,17 +1,19 @@
 import cv2
 import matplotlib.pyplot as plt
 from Hanoi_Interpreter import HanoiInterpreter
-pegs_x = {'peg1': 110,
-          'peg2': 320,
-          'peg3': 510}
-
-y_range = {'top': 170,
-           'bottom': 350}
+# pegs_x = {'peg1': 110,
+#           'peg2': 320,
+#           'peg3': 510}
+pegs_x = {'peg1': 150,
+          'peg2': 260,
+          'peg3': 420}
+y_range = {'top': 120,
+           'bottom': 280}
 
 
 
 cv2.namedWindow("preview")
-vc = cv2.VideoCapture(1)
+vc = cv2.VideoCapture(4)
 
 if vc.isOpened(): # try to get the first frame
     rval, frame = vc.read()

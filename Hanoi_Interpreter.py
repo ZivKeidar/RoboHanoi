@@ -6,9 +6,9 @@ DISK_COLORS = {'disk1': 'yellow',
                'disk2': 'orange',
                'disk3': 'green'}
 
-COLORS = {'green': [25, 104,  38],
-          'orange': [41, 101, 229],
-          'yellow': [45, 172, 202]}
+COLORS = {'green': [98, 155, 75],
+          'orange': [108, 158, 255],
+          'yellow': [119, 214, 253]}
 
 
 CONV_SIZE = (5,10)

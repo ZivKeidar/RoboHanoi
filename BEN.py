@@ -1,10 +1,27 @@
 # !! disk3 > disk2 > disk1 !!
-from Robot.Code.Control import Arm
-from Robot.Code.Control import Gripper
+import Control
+from Control import Arm
+from Control import Gripper
+import time
 # from Control import Arm
-places = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] # order frome low to high --> [peg1[low,mid,high] , peg2[low,med.high] , peg3[low,med,high]]
-top_places = [111, 222, 333]  # coordinates above [peg1,peg2,peg3]
-home = []
+
+point_left_low_1 = [-79.5, 25, 100, -1.5, -5.5, -1.5]
+point_left_mid_2 = [-78.5, 24, 100, -1.5, -8.5, -1.5]
+point_left_high_3 = [-78.5, 18, 104, -1.5, -4.5, -1.5]
+point_mid_low_4 = [-89.5, 24, 100, -1.5, 1, -1.5]
+point_mid_mid_5 = [-89.5, 21, 99, -1.5, 1, -1.5]
+point_mid_high_6 = [-89.5, 19, 102, -1.5, -2.5, -1.5]
+point_right_low_7 = [-102.5, 25, 97, -1.5, 0, -1.5]
+point_right_mid_8 = [-102.5, 24, 100, -1.5, -5.5, -1.5]
+point_right_high_9 = [-103.5, 22, 101, -1.5, -3.5, -1.5]
+
+top_right = [-101.5, 12, 98, -1.5, -2, -1.5]
+top_mid = [-89.5, 13, 100, -1.5, -2, -1.5]
+top_left = [-78.5, 12, 97, -1.5, -2, -1.5]
+
+places = [[point_left_low_1, point_left_mid_2, point_left_high_3], [point_mid_low_4, point_mid_mid_5, point_mid_high_6], [point_right_low_7, point_right_mid_8, point_right_high_9]] # order frome low to high --> [peg1[low,mid,high] , peg2[low,med.high] , peg3[low,med,high]]
+top_places = [top_left, top_mid, top_right]  # coordinates above [peg1,peg2,peg3]
+home = [-90.5, -4.5, 98, -0.5, 19, -0.5]
 
 
 class Execution:
@@ -13,17 +30,40 @@ class Execution:
         self.gripper = Gripper()
         self.actions = self.string2actions(plan)
         self.disk_locations = self.position2locations(state)
+        self.arm.set_Current_Pos(home)
+        time.sleep(4)
 
     def arm_execution(self, place_from, peg_from, peg_to, place_to):
         # use self.arm to send specific orders to the arm
         # for example:
-        self.arm.set_Current_Pos(place_from)       # arm goes to disk's position
+        self.arm.set_Current_Pos(place_from)
+        time.sleep(2)
         self.gripper.pickup()
-        self.arm.set_Current_Pos(top_places[peg_from])      # arm goes up
+        self.arm.set_Current_Pos(top_places[peg_from])
+        time.sleep(7)
+        self.arm.set_Current_Pos(home)
+        time.sleep(4)
         self.arm.set_Current_Pos(top_places[peg_to])
-        self.arm.set_Current_Pos(place_to)      # arm goes down
         self.gripper.release()
-        self.arm.get_sent_pos(home)
+        time.sleep(2)
+        self.arm.set_Current_Pos(home)
+        
+        
+        # self.arm.set_Current_Pos(top_places[peg_from])
+        # time.sleep(9)
+        # self.arm.set_Current_Pos(place_from)       # arm goes to disk's position
+        # time.sleep(7)
+        # self.gripper.pickup()
+        # time.sleep(5)
+        # self.arm.set_Current_Pos(top_places[peg_from])      # arm goes up
+        # time.sleep(7)
+        # self.arm.set_Current_Pos(top_places[peg_to])
+        # time.sleep(7)
+        # self.arm.set_Current_Pos(place_to)      # arm goes down
+        # time.sleep(7)
+        # self.gripper.release()
+        # time.sleep(5)
+        # self.arm.get_sent_pos(home)
 
     def execute_next(self):
         disk, peg_from, peg_to = self.actions[0][0], self.actions[0][1], self.actions[0][2]
@@ -64,6 +104,7 @@ class Execution:
             loc[int(state[state['disk1']][-1])-1][1] = 1
         else:
             loc[int(state[state[state['disk1']]][-1])-1][2] = 1
+        print(loc)
         return loc
 
 if __name__ == "__main__":
