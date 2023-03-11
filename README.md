@@ -2,6 +2,9 @@
 Hello and Welcome to RoboHanoi - an Interactive game based on the classic Tower of Hanoi problem.
 
 Here you can find all code used to create a real-world Human vs. 6 DOF Robot game.
+
+Video example: https://technionmail-my.sharepoint.com/:v:/g/personal/nir_levy_campus_technion_ac_il/EUtX08YsOXpPqrFyOgnVl4UBaD94o-FSorV6FxvRmxLRhg?e=iUpKQX
+
 ## Main Components
 ### Game
 Running `game.py` will start the game, including all features and components. The game includes a home screen based on the Tkinter library, which inlcudes a button for switching turns between the human and the Robot.
